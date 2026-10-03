@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#131416">
+<meta name="days-version" content="1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Days">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700&display=swap">
+<title>Days</title>
+<style>
+:root,[data-theme="dark"]{--bg:#131416;--s1:#1b1c1f;--s2:#232428;--s3:#2d2e33;--line:#2f3036;--text:#ededee;--muted:#9b9ca3;--faint:#66676e;--chalk:#f2f2ef;--onchalk:#131416;
+  --birthday:#d8b3a3;--appointment:#9db4c8;--event:#c4bd9c;--reminder:#b4b4bd;--danger:#e08a8a;--ok:#a9c7a6;color-scheme:dark}
+[data-theme="light"]{--bg:#efeff1;--s1:#ffffff;--s2:#f6f6f7;--s3:#e9e9ec;--line:#dddde2;--text:#17181a;--muted:#686970;--faint:#a0a1a8;--chalk:#17181a;--onchalk:#ffffff;
+  --birthday:#a8705b;--appointment:#4d6f8c;--event:#7f7652;--reminder:#6e6e78;--danger:#b54848;--ok:#4f7a4b;color-scheme:light}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:Manrope,system-ui,-apple-system,sans-serif;font-size:15px;line-height:1.45}
+body{min-height:100vh;transition:background .3s}
+button,input,select,textarea{font:inherit;color:inherit}
+.serif{font-family:"Instrument Serif",Georgia,serif;font-weight:400;letter-spacing:-.01em}
+.ic{display:block;flex:none}
+.muted{color:var(--muted)}.small{font-size:12.5px}
+:focus-visible{outline:2px solid var(--chalk);outline-offset:2px;border-radius:8px}
+/* layout */
+.shell{display:flex;min-height:100vh}
+.side{display:none}
+main{flex:1;min-width:0;max-width:560px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 14px) 18px calc(110px + env(safe-area-inset-bottom))}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:6px 2px 18px}
+.top h1{margin:0;font-size:46px;line-height:.95}
+.top h1 small{display:block;font-family:Manrope,sans-serif;font-size:13px;color:var(--muted);letter-spacing:0;margin-top:6px}
+.iconbtn{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:transparent;display:grid;place-items:center;cursor:pointer;color:var(--muted);flex:none}
+.iconbtn:active{transform:scale(.92)}
+.row-btns{display:flex;gap:8px}
+.nav{position:fixed;left:0;right:0;bottom:0;padding:0 18px calc(14px + env(safe-area-inset-bottom));display:flex;justify-content:center;z-index:20;pointer-events:none}
+.nav-in{pointer-events:auto;width:min(524px,100%);height:64px;border-radius:32px;background:color-mix(in srgb,var(--s1) 88%,transparent);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--line);display:flex;align-items:center;justify-content:space-around;padding:0 8px;box-shadow:0 20px 40px -20px rgba(0,0,0,.5)}
+.nav-in button{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10.5px;font-weight:600;color:var(--faint);cursor:pointer;padding:6px 8px;min-width:56px}
+.nav-in button.on{color:var(--text)}
+.nav-in .mic{width:52px;height:52px;border-radius:50%;background:var(--chalk);color:var(--onchalk);justify-content:center;padding:0;min-width:0;margin-top:-30px;box-shadow:0 10px 24px -8px rgba(0,0,0,.6)}
+@media(min-width:900px){
+  .nav{display:none}
+  .side{display:flex;flex-direction:column;gap:4px;width:240px;flex:none;padding:30px 18px;border-right:1px solid var(--line);position:sticky;top:0;height:100vh}
+  .side .brand{font-size:40px;margin:0 10px 26px}
+  .side button.nv{border:0;background:none;display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:12px;font-weight:600;color:var(--muted);cursor:pointer;text-align:left}
+  .side button.nv.on{background:var(--s2);color:var(--text)}
+  .side .btn{margin-top:16px}
+  main{max-width:1180px;padding:34px 40px 60px}
+  .cols{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:40px;align-items:start}
+  .top .only-m{display:none}
+  .overlay{align-items:center!important}.sheet{border-radius:24px!important}
+}
+/* month grid */
+.month{margin-bottom:8px}
+.mhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.mhead .arrows{display:flex;gap:6px}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.grid .wd{text-align:center;font-size:11.5px;color:var(--faint);font-weight:600;padding:4px 0 8px}
+.day{position:relative;aspect-ratio:1/1.08;border:0;background:transparent;border-radius:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:7px;color:var(--text)}
+.day .n{font-family:"Instrument Serif",Georgia,serif;font-size:23px;line-height:1;width:34px;height:34px;display:grid;place-items:center;border-radius:50%}
+.day.out{opacity:.28}
+.day.past .n{color:var(--muted)}
+.day.today .n{background:var(--chalk);color:var(--onchalk)}
+.day.sel{background:var(--s2)}
+.day .dots{display:flex;gap:3px;margin-top:4px;height:5px}
+.day .dots i{width:5px;height:5px;border-radius:50%}
+/* agenda */
+.sec{display:flex;align-items:baseline;justify-content:space-between;margin:26px 2px 10px}
+.sec h2{margin:0;font-size:28px}
+.sec button{border:0;background:none;color:var(--muted);font-weight:600;cursor:pointer;font-size:13px}
+.dgroup{display:grid;grid-template-columns:58px 1fr;gap:12px;padding:14px 0;border-top:1px solid var(--line)}
+.dgroup:first-of-type{border-top:0}
+.dlabel{text-align:left}
+.dlabel b{display:block;font-family:"Instrument Serif",Georgia,serif;font-weight:400;font-size:38px;line-height:.9}
+.dlabel span{font-size:11.5px;color:var(--muted);text-transform:lowercase}
+.evs{display:flex;flex-direction:column;gap:8px;min-width:0}
+.ev{display:flex;gap:12px;align-items:stretch;background:var(--s1);border-radius:16px;padding:12px 14px;cursor:pointer;border:1px solid transparent;transition:border-color .2s}
+.ev:active{transform:scale(.99)}
+.ev .bar{width:3px;border-radius:3px;flex:none}
+.ev .mid{flex:1;min-width:0}
+.ev .t{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev .s{font-size:12.5px;color:var(--muted);margin-top:2px}
+.ev .r{font-size:12px;color:var(--muted);text-align:right;white-space:nowrap;align-self:center}
+.ev.done .t{text-decoration:line-through;color:var(--muted)}
+.empty{color:var(--muted);padding:22px 4px;line-height:1.55}
+.empty b{color:var(--text);display:block;font-family:"Instrument Serif",Georgia,serif;font-weight:400;font-size:26px;margin-bottom:4px}
+.typekey{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:10px 2px 0}
+.typekey i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;vertical-align:1px}
+/* birthdays list */
+.bd{display:flex;align-items:center;gap:14px;padding:14px 4px;border-top:1px solid var(--line);cursor:pointer}
+.bd:first-child{border-top:0}
+.bd .num{width:58px;flex:none}
+.bd .num b{display:block;font-family:"Instrument Serif",Georgia,serif;font-weight:400;font-size:34px;line-height:.9}
+.bd .num span{font-size:11.5px;color:var(--muted)}
+.bd .mid{flex:1;min-width:0}.bd .t{font-weight:600}.bd .s{font-size:12.5px;color:var(--muted)}
+.bd .left{font-size:12.5px;color:var(--muted);text-align:right}
+.bd .left b{display:block;color:var(--birthday);font-size:15px}
+/* sheets */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;align-items:flex-end;justify-content:center}
+.overlay.open{display:flex}
+.sheet{width:100%;max-width:560px;max-height:93vh;overflow:auto;background:var(--s1);border-radius:26px 26px 0 0;padding:10px 20px calc(24px + env(safe-area-inset-bottom));animation:up .3s cubic-bezier(.2,.9,.3,1)}
+@keyframes up{from{transform:translateY(30px);opacity:0}}
+.grab{width:38px;height:4px;border-radius:4px;background:var(--line);margin:4px auto 14px}
+.shead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:16px}
+.shead h3{margin:0;font-size:32px;line-height:1}
+.shead p{margin:6px 0 0;color:var(--muted);font-size:13px}
+.x{width:36px;height:36px;border-radius:50%;border:0;background:var(--s2);color:var(--muted);display:grid;place-items:center;cursor:pointer;flex:none}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12.5px;color:var(--muted);margin:0 0 6px 2px;font-weight:600}
+.field input,.field select,.field textarea{width:100%;padding:13px 14px;border-radius:14px;border:1px solid var(--line);background:var(--s2);font-size:16px;outline:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--muted)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.seg{display:flex;background:var(--s2);border-radius:14px;padding:4px;gap:2px;margin-bottom:14px;overflow-x:auto}
+.seg button{flex:1;border:0;background:none;padding:9px 6px;border-radius:10px;font-weight:600;font-size:13px;color:var(--muted);cursor:pointer;white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:6px}
+.seg button.on{background:var(--s1);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.seg button i{width:7px;height:7px;border-radius:50%}
+.seg.types{display:grid;grid-template-columns:repeat(4,auto)}
+@media(max-width:430px){.seg.types{grid-template-columns:1fr 1fr}}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:transparent;border-radius:99px;padding:8px 13px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer}
+.chip.on{background:var(--chalk);border-color:var(--chalk);color:var(--onchalk)}
+.btn{width:100%;border:0;border-radius:16px;padding:15px;font-weight:700;font-size:15.5px;background:var(--chalk);color:var(--onchalk);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn:active{transform:scale(.98)}.btn:disabled{opacity:.5}
+.btn.alt{background:var(--s2);color:var(--text)}
+.btn.danger{background:transparent;color:var(--danger);border:1px solid var(--line)}
+.btn+.btn{margin-top:10px}
+.linkb{border:0;background:none;color:var(--text);font-weight:700;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:0}
+.tgl{appearance:none;-webkit-appearance:none;width:46px;height:28px;border-radius:99px;background:var(--s3);position:relative;cursor:pointer;flex:none;margin:0;transition:background .2s}
+.tgl::after{content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--muted);transition:transform .22s cubic-bezier(.3,1.4,.5,1),background .2s}
+.tgl:checked{background:var(--chalk)}.tgl:checked::after{transform:translateX(18px);background:var(--onchalk)}
+.list{background:var(--s1);border-radius:18px;padding:2px 16px}
+.li{display:flex;align-items:center;gap:12px;padding:14px 0;border-top:1px solid var(--line);cursor:pointer}
+.li:first-child{border-top:0}
+.li .mid{flex:1;min-width:0}.li .t{font-weight:600}.li .s{font-size:12.5px;color:var(--muted)}
+/* capture */
+.cap-orb{position:relative;width:132px;height:132px;margin:8px auto 6px;display:grid;place-items:center}
+.cap-orb button{position:relative;z-index:2;width:92px;height:92px;border-radius:50%;border:0;background:var(--chalk);color:var(--onchalk);display:grid;place-items:center;cursor:pointer;transition:transform .15s}
+.cap-orb button:active{transform:scale(.94)}
+.cap-orb .ring{position:absolute;inset:20px;border-radius:50%;border:1.5px solid var(--chalk);opacity:0}
+.cap-orb.rec .ring{animation:ring 1.8s ease-out infinite}
+.cap-orb.rec .ring:nth-child(2){animation-delay:.6s}.cap-orb.rec .ring:nth-child(3){animation-delay:1.2s}
+.cap-orb.rec button{transform:scale(calc(1 + var(--lvl,0) * .12))}
+@keyframes ring{0%{transform:scale(1);opacity:.5}100%{transform:scale(1.55);opacity:0}}
+.cap-state{text-align:center;color:var(--muted);font-size:13px;min-height:20px}
+.wave{display:flex;gap:4px;justify-content:center;align-items:center;height:26px;margin:6px 0}
+.wave i{width:3px;border-radius:3px;background:var(--text);height:6px;transition:height .12s}
+.cap-text{font-family:"Instrument Serif",Georgia,serif;font-size:30px;line-height:1.15;text-align:center;min-height:70px;margin:10px 4px 6px;word-break:break-word}
+.cap-text .hint{color:var(--faint)}
+.cap-text textarea{width:100%;border:0;background:transparent;font:inherit;text-align:center;resize:none;outline:none;color:var(--text)}
+.interp{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:6px 0 18px;min-height:34px}
+.interp span{display:inline-flex;align-items:center;gap:6px;background:var(--s2);border-radius:99px;padding:7px 12px;font-size:13px;font-weight:600;animation:pop .3s cubic-bezier(.3,1.5,.5,1)}
+.interp span i{width:7px;height:7px;border-radius:50%}
+@keyframes pop{from{transform:scale(.7);opacity:0}}
+/* auth / splash / toast */
+.auth{position:fixed;inset:0;z-index:90;display:none;overflow:auto;background:var(--bg)}
+.auth.open{display:block}
+.auth-box{max-width:400px;margin:auto;min-height:100vh;padding:40px 22px;display:flex;flex-direction:column;justify-content:center}
+.auth h1{font-size:76px;margin:0;line-height:.9}
+.auth .sub{color:var(--muted);margin:10px 0 28px;line-height:1.5}
+.err{display:none;background:color-mix(in srgb,var(--danger) 14%,transparent);color:var(--danger);border-radius:12px;padding:10px 12px;font-size:13.5px;margin-bottom:12px}
+.switch{text-align:center;margin-top:16px;color:var(--muted);font-size:14px}
+.splash{position:fixed;inset:0;z-index:100;background:var(--bg);display:grid;place-items:center;transition:opacity .4s}
+.splash.hide{opacity:0;pointer-events:none}
+.splash .big{font-size:120px;line-height:1;text-align:center}
+.splash .big small{display:block;font-family:Manrope,sans-serif;font-size:14px;color:var(--muted);letter-spacing:.02em}
+.toast{position:fixed;left:50%;bottom:calc(98px + env(safe-area-inset-bottom));transform:translate(-50%,16px);background:var(--chalk);color:var(--onchalk);border-radius:99px;padding:11px 18px;font-weight:600;font-size:14px;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:95;max-width:calc(100% - 32px);text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.fade{animation:fade .35s ease both}@keyframes fade{from{opacity:0}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="splash" id="splash"><div class="big serif" id="splashNum"></div></div>
+
+<div class="auth" id="auth"><div class="auth-box">
+  <h1 class="serif">Days</h1>
+  <p class="sub" id="authSub">Cumpleaños, citas y todo lo que no quieres olvidar. Te aviso antes.</p>
+  <div id="loginCard">
+    <div class="err" id="loginErr"></div>
+    <div class="field"><label for="lEmail">Correo</label><input id="lEmail" type="email" autocomplete="username" placeholder="tucorreo@ejemplo.com"></div>
+    <div class="field"><label for="lPass">Contraseña</label><input id="lPass" type="password" autocomplete="current-password" placeholder="Tu contraseña"></div>
+    <button class="btn" id="lBtn" onclick="login()">Entrar</button>
+    <div class="switch">¿No tienes cuenta? <button class="linkb" onclick="showSignup(true)">Crear cuenta</button></div>
+    <div class="switch small">Es la misma cuenta de Nutri, Ritmo y North.</div>
+  </div>
+  <div id="signupCard" style="display:none">
+    <div class="err" id="signupErr"></div>
+    <div class="field"><label for="sName">Tu nombre</label><input id="sName" autocomplete="given-name"></div>
+    <div class="field"><label for="sEmail">Correo</label><input id="sEmail" type="email" autocomplete="username"></div>
+    <div class="field"><label for="sPass">Contraseña</label><input id="sPass" type="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres"></div>
+    <button class="btn" id="sBtn" onclick="signup()">Crear cuenta</button>
+    <div class="switch">¿Ya tienes cuenta? <button class="linkb" onclick="showSignup(false)">Entrar</button></div>
+  </div>
+</div></div>
+
+<div class="shell">
+  <aside class="side" id="side"></aside>
+  <main id="main"></main>
+</div>
+<nav class="nav"><div class="nav-in" id="nav"></div></nav>
+<div class="overlay" id="overlay"><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="sounds.js" data-app="days"></script>
+<script src="speech-parser.js"></script>
+<script>
+const SUPABASE_URL='https://xvncydijzordzwrilqai.supabase.co';
+const SUPABASE_KEY='sb_publishable_tLpsLGTQfdAGX5Il611y7w_i3DIuWrx';
+const PUSH_API='https://hola-ritmo.vercel.app';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+let user=null,events=[],view='cal',calMonth=null,selDay=null;
+
+/* ---------------- utilidades ---------------- */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const dkey=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const today=()=>dkey(new Date());
+const parseD=k=>new Date(k+'T12:00:00');
+const addDays=(k,n)=>{const d=parseD(k);d.setDate(d.getDate()+n);return dkey(d)};
+const diffDays=(a,b)=>Math.round((parseD(b)-parseD(a))/864e5);
+const lastDay=(y,m)=>new Date(y,m,0).getDate();
+const cap=s=>s?s.charAt(0).toUpperCase()+s.slice(1):s;
+function fmtDate(k,o={weekday:'long',day:'numeric',month:'long'}){return parseD(k).toLocaleDateString('es-MX',o)}
+function fmtTime(t){if(!t)return '';const [h,m]=t.split(':').map(Number);const d=new Date();d.setHours(h,m,0,0);return d.toLocaleTimeString('es-MX',{hour:'numeric',minute:'2-digit'})}
+function userName(){return (user?.user_metadata?.name||user?.email?.split('@')[0]||'').split(' ')[0]}
+function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+function relWord(n){return n===0?'Hoy':n===1?'Mañana':n===2?'Pasado mañana':n<0?'Hace '+(-n)+' días':'En '+n+' días'}
+
+const TYPES={birthday:{n:'Cumpleaños',c:'var(--birthday)'},appointment:{n:'Cita',c:'var(--appointment)'},event:{n:'Evento',c:'var(--event)'},reminder:{n:'Recordatorio',c:'var(--reminder)'}};
+const REPEAT={none:'No se repite',yearly:'Cada año',monthly:'Cada mes',weekly:'Cada semana'};
+
+/* ---------------- íconos ---------------- */
+const IC={
+  cal:'<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+  list:'<path d="M8 6.5h12M8 12h12M8 17.5h12"/><circle cx="4.5" cy="6.5" r=".9"/><circle cx="4.5" cy="12" r=".9"/><circle cx="4.5" cy="17.5" r=".9"/>',
+  cake:'<path d="M4 20.5h16M5 20.5v-6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v6"/><path d="M5 16c1.5 1 3 1 4.5 0s3-1 4.5 0 3 1 4.5 0"/><path d="M12 12.5V9M12 6.5c-.8-.8-.8-1.8 0-3 .8 1.2.8 2.2 0 3z"/>',
+  gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.4M12 18.8v2.4M4.2 7.5l2.1 1.2M17.7 15.3l2.1 1.2M4.2 16.5l2.1-1.2M17.7 8.7l2.1-1.2"/><circle cx="12" cy="12" r="7"/>',
+  mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  close:'<path d="M6 6l12 12M18 6 6 18"/>',
+  left:'<path d="M15 6l-6 6 6 6"/>',right:'<path d="M9 6l6 6-6 6"/>',
+  check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  bell:'<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',
+  trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
+  keyboard:'<rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  sound:'<path d="M4 9h4l5-4v14l-5-4H4zM16.5 8.5a5 5 0 0 1 0 7"/>',
+  moon:'<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
+  logout:'<path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H3"/>',
+  today:'<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/><circle cx="12" cy="15" r="1.6" fill="currentColor"/>',
+};
+const ic=(n,s=20,w=1.7)=>`<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]||''}</svg>`;
+
+/* ---------------- tema ---------------- */
+function themePref(){return ls('days_theme')||'dark'}
+function applyTheme(){const p=themePref();const t=p==='auto'?(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'):p;document.documentElement.dataset.theme=t;const m=document.querySelector('meta[name=theme-color]');if(m)m.content=t==='light'?'#efeff1':'#131416'}
+
+/* ---------------- avisos (alerts) ---------------- */
+// {d:N,t:'HH:MM'} = N días antes a esa hora · {m:N} = N minutos antes de la hora del evento
+const PRESETS=[['d14','2 semanas antes',{d:14}],['d7','1 semana antes',{d:7}],['d3','3 días antes',{d:3}],['d1','1 día antes',{d:1}],['d0','El mismo día',{d:0}],['m120','2 horas antes',{m:120}],['m60','1 hora antes',{m:60}],['m30','30 min antes',{m:30}],['m0','A la hora',{m:0}]];
+const akey=a=>a.m!=null?'m'+a.m:'d'+a.d;
+function alertTime(kind,d){return d===0?'08:00':kind==='birthday'?'09:00':'20:00'}
+function defaultAlerts(kind,time){
+  if(kind==='birthday')return [{d:7,t:'09:00'},{d:1,t:'09:00'},{d:0,t:'08:00'}];
+  if(kind==='appointment')return time?[{d:1,t:'20:00'},{m:120}]:[{d:1,t:'20:00'},{d:0,t:'08:00'}];
+  if(kind==='event')return time?[{d:1,t:'20:00'},{m:60}]:[{d:1,t:'20:00'},{d:0,t:'08:00'}];
+  return time?[{m:0}]:[{d:0,t:'09:00'}];
+}
+function alertLabel(a){return (PRESETS.find(p=>p[0]===akey(a))||[0,a.m!=null?a.m+' min antes':a.d+' días antes'])[1]}
+function alertsText(ev){const al=ev.alerts||[];if(!al.length)return 'Sin avisos';return al.map(alertLabel).join(', ')}
+
+/* ---------------- ocurrencias (repeticiones) ---------------- */
+function occurrences(ev,from,to){
+  const res=[];const base=ev.date;if(!base)return res;
+  const [by,bm,bd]=base.split('-').map(Number);
+  if(ev.repeat==='yearly'){for(let y=+from.slice(0,4);y<=+to.slice(0,4);y++){const k=`${y}-${pad(bm)}-${pad(Math.min(bd,lastDay(y,bm)))}`;if(k>=from&&k<=to&&(ev.kind==='birthday'||k>=base))res.push(k)}}
+  else if(ev.repeat==='monthly'){let y=+from.slice(0,4),m=+from.slice(5,7);for(let i=0;i<14;i++){const k=`${y}-${pad(m)}-${pad(Math.min(bd,lastDay(y,m)))}`;if(k>to)break;if(k>=from&&k>=base)res.push(k);m++;if(m>12){m=1;y++}}}
+  else if(ev.repeat==='weekly'){let k=base;if(k<from){const n=Math.ceil(diffDays(k,from)/7);k=addDays(k,n*7)}for(;k<=to;k=addDays(k,7))res.push(k)}
+  else if(base>=from&&base<=to)res.push(base);
+  return res;
+}
+function expand(from,to){const out=[];for(const ev of events)for(const k of occurrences(ev,from,to))out.push({ev,date:k});return out.sort((a,b)=>a.date.localeCompare(b.date)||(a.ev.time||'99').localeCompare(b.ev.time||'99'))}
+function ageOn(ev,k){return ev.kind==='birthday'&&ev.born_year?(+k.slice(0,4))-ev.born_year:null}
+function personOf(ev){return cap(ev.title.replace(/^Cumplea[ñn]os de\s*/i,''))||ev.title}
+
+/* ---------------- datos ---------------- */
+async function loadData(){const {data,error}=await sb.from('dy_events').select('*').order('date');if(error)throw error;events=data||[]}
+
+/* ---------------- navegación ---------------- */
+const VIEWS=[['cal','Calendario','cal'],['next','Próximos','list'],['bdays','Cumpleaños','cake'],['settings','Ajustes','gear']];
+function buildNav(){
+  $('nav').innerHTML=VIEWS.slice(0,2).map(navBtn).join('')+`<button class="mic" data-nosfx onclick="openCapture()" aria-label="Agregar con la voz">${ic('mic',24,1.9)}</button>`+VIEWS.slice(2).map(navBtn).join('');
+  $('side').innerHTML=`<div class="brand serif">Days</div>`+VIEWS.map(v=>`<button class="nv ${view===v[0]?'on':''}" onclick="go('${v[0]}')">${ic(v[2],19)} ${v[1]}</button>`).join('')+`<button class="btn" onclick="openCapture()">${ic('mic',18)} Agregar</button>`;
+}
+const navBtn=v=>`<button class="${view===v[0]?'on':''}" onclick="go('${v[0]}')">${ic(v[2],21)}<span>${v[1]}</span></button>`;
+function go(v){if(v!==view)sfx('toggle');view=v;buildNav();render();scrollTo({top:0})}
+function render(){const m=$('main');m.innerHTML=view==='cal'?calView():view==='next'?nextView():view==='bdays'?bdaysView():settingsView();m.classList.remove('fade');void m.offsetWidth;m.classList.add('fade')}
+
+/* ---------------- vista calendario ---------------- */
+function calView(){
+  const t=today();if(!calMonth)calMonth=t.slice(0,7);if(!selDay)selDay=t;
+  const [y,m]=calMonth.split('-').map(Number);const first=new Date(y,m-1,1);const startOff=(first.getDay()+6)%7; // semana empieza en lunes
+  const gridStart=addDays(dkey(first),-startOff);const cells=[];
+  for(let i=0;i<42;i++){const k=addDays(gridStart,i);if(i>=35&&k.slice(0,7)!==calMonth)break;cells.push(k)}
+  const occ=expand(cells[0],cells[cells.length-1]);const byDay={};occ.forEach(o=>(byDay[o.date]=byDay[o.date]||[]).push(o));
+  const title=cap(first.toLocaleDateString('es-MX',{month:'long'}));
+  const grid=`<div class="grid">${['L','M','M','J','V','S','D'].map(d=>`<div class="wd">${d}</div>`).join('')}${cells.map(k=>{const list=byDay[k]||[];const types=[...new Set(list.map(o=>o.ev.kind))].slice(0,3);
+    return `<button class="day ${k.slice(0,7)!==calMonth?'out':''} ${k<t?'past':''} ${k===t?'today':''} ${k===selDay?'sel':''}" onclick="pickDay('${k}')" aria-label="${fmtDate(k)}${list.length?', '+list.length+' cosas':''}"><span class="n">${+k.slice(8)}</span><span class="dots">${types.map(ty=>`<i style="background:${TYPES[ty].c}"></i>`).join('')}</span></button>`}).join('')}</div>`;
+  const dayList=byDay[selDay]||expand(selDay,selDay);
+  const right=`<div class="sec"><h2 class="serif">${selDay===t?'Hoy':cap(fmtDate(selDay,{weekday:'long',day:'numeric'}))}</h2><button onclick="openEditor(null,'${selDay}')">${'Agregar'}</button></div>
+    ${dayList.length?`<div class="evs">${dayList.map(o=>evRow(o,true)).join('')}</div>`:`<div class="empty">Nada para este día. Toca el micrófono y di algo como <i>“el jueves a las 4 pm ir al doctor”</i>.</div>`}
+    <div class="sec"><h2 class="serif">Lo que viene</h2><button onclick="go('next')">Ver todo</button></div>${agendaGroups(expand(addDays(t,1),addDays(t,30)).slice(0,6))||'<div class="empty">Nada en los próximos 30 días.</div>'}`;
+  return `<div class="top"><h1 class="serif">${title}<small>${y}</small></h1><div class="row-btns">${calMonth!==t.slice(0,7)?`<button class="iconbtn" onclick="calMonth=null;selDay=null;render()" aria-label="Ir a hoy">${ic('today',19)}</button>`:''}<button class="iconbtn" onclick="shiftMonth(-1)" aria-label="Mes anterior">${ic('left',19)}</button><button class="iconbtn" onclick="shiftMonth(1)" aria-label="Mes siguiente">${ic('right',19)}</button></div></div>
+  <div class="cols"><div class="month">${grid}<div class="typekey">${Object.entries(TYPES).map(([k,v])=>`<span><i style="background:${v.c}"></i>${v.n}</span>`).join('')}</div></div><div>${right}</div></div>`;
+}
+function shiftMonth(n){const [y,m]=calMonth.split('-').map(Number);const d=new Date(y,m-1+n,1);calMonth=d.getFullYear()+'-'+pad(d.getMonth()+1);sfx('toggle');render()}
+function pickDay(k){selDay=k;if(k.slice(0,7)!==calMonth)calMonth=k.slice(0,7);render()}
+function evRow(o,noDate){
+  const ev=o.ev,ty=TYPES[ev.kind],age=ageOn(ev,o.date),n=diffDays(today(),o.date);
+  const sub=[ev.kind==='birthday'?(age?'Cumple '+age:'Cumpleaños'):ty.n,ev.time?fmtTime(ev.time):(ev.kind==='birthday'?'':'Todo el día'),ev.repeat!=='none'&&ev.kind!=='birthday'?REPEAT[ev.repeat].toLowerCase():''].filter(Boolean).join(', ');
+  return `<div class="ev ${ev.done?'done':''}" onclick="openEvent('${ev.id}','${o.date}')"><span class="bar" style="background:${ty.c}"></span><div class="mid"><div class="t">${esc(ev.title)}</div><div class="s">${esc(sub)}</div></div>${noDate?'':`<div class="r">${relWord(n)}</div>`}</div>`;
+}
+function agendaGroups(list){
+  if(!list.length)return '';const g={};list.forEach(o=>(g[o.date]=g[o.date]||[]).push(o));const t=today();
+  return Object.entries(g).map(([k,os])=>{const n=diffDays(t,k);return `<div class="dgroup"><div class="dlabel"><b>${+k.slice(8)}</b><span>${n===0?'hoy':n===1?'mañana':parseD(k).toLocaleDateString('es-MX',{weekday:'short',month:'short'}).replace(/\./g,'')}</span></div><div class="evs">${os.map(o=>evRow(o,true)).join('')}</div></div>`}).join('');
+}
+
+/* ---------------- próximos ---------------- */
+function nextView(){
+  const t=today();const list=expand(t,addDays(t,90));
+  const byMonth={};list.forEach(o=>(byMonth[o.date.slice(0,7)]=byMonth[o.date.slice(0,7)]||[]).push(o));
+  return `<div class="top"><h1 class="serif">Próximos<small>Los siguientes 3 meses</small></h1><button class="iconbtn only-m" onclick="openEditor()" aria-label="Agregar">${ic('plus',19)}</button></div>
+  ${list.length?Object.entries(byMonth).map(([mk,os])=>`<div class="sec"><h2 class="serif">${cap(parseD(mk+'-01').toLocaleDateString('es-MX',{month:'long'}))}</h2><span class="muted small">${os.length} ${os.length===1?'cosa':'cosas'}</span></div>${agendaGroups(os)}`).join(''):`<div class="empty"><b>Todo despejado</b>Agrega un cumpleaños o una cita con el micrófono.</div>`}`;
+}
+
+/* ---------------- cumpleaños ---------------- */
+function bdaysView(){
+  const t=today();const bs=events.filter(e=>e.kind==='birthday').map(ev=>{const next=occurrences(ev,t,addDays(t,366))[0];return {ev,next,n:next?diffDays(t,next):999}}).sort((a,b)=>a.n-b.n);
+  return `<div class="top"><h1 class="serif">Cumpleaños<small>${bs.length} ${bs.length===1?'persona':'personas'}</small></h1><button class="iconbtn" onclick="openEditor(null,null,'birthday')" aria-label="Agregar cumpleaños">${ic('plus',19)}</button></div>
+  ${bs.length?`<div>${bs.map(({ev,next,n})=>{const age=next?ageOn(ev,next):null;return `<div class="bd" onclick="openEvent('${ev.id}','${next}')"><div class="num"><b>${+next.slice(8)}</b><span>${parseD(next).toLocaleDateString('es-MX',{month:'short'}).replace('.','')}</span></div><div class="mid"><div class="t">${esc(personOf(ev))}</div><div class="s">${age?'Cumple '+age:'Cumpleaños'}, ${fmtDate(next,{weekday:'long'})}</div></div><div class="left">${n===0?'<b>¡Hoy!</b>':n===1?'<b>Mañana</b>':`<b>${n}</b>días`}</div></div>`}).join('')}</div>`
+  :`<div class="empty"><b>Nadie todavía</b>Di <i>“cumpleaños de mi mamá el 12 de noviembre, cumple 60”</i> y te aviso una semana antes, un día antes y el mismo día.<div style="margin-top:16px"><button class="btn" onclick="openCapture()">${ic('mic',18)} Agregar con la voz</button></div></div>`}`;
+}
+
+/* ---------------- ajustes ---------------- */
+function settingsView(){
+  const st=pushState();const txt={on:'Activadas en este teléfono',off:'Toca para activarlas',install:'Primero instala Days en tu pantalla de inicio',denied:'Bloqueadas en los ajustes del teléfono',unsupported:'Este navegador no las permite'}[st];
+  return `<div class="top"><h1 class="serif">Ajustes</h1></div>
+  <div class="list">
+    <div class="li" onclick="openName()">${ic('user',20)}<div class="mid"><div class="t">${esc(user?.user_metadata?.name||'Tu nombre')}</div><div class="s">${esc(user?.email||'')}</div></div><span class="muted small">Cambiar</span></div>
+    <div class="li" onclick="${st==='on'?'testPush()':'openNotif()'}">${ic('bell',20)}<div class="mid"><div class="t">Notificaciones</div><div class="s">${txt}</div></div><span class="muted small">${st==='on'?'Probar':''}</span></div>
+    <label class="li">${ic('sound',20)}<div class="mid"><div class="t">Sonidos</div><div class="s">Al tocar, guardar y grabar</div></div><input type="checkbox" class="tgl" ${soundOn()?'checked':''} onchange="setSound(this.checked)"></label>
+    <div class="li" style="cursor:default">${ic('moon',20)}<div class="mid"><div class="t">Apariencia</div></div></div>
+  </div>
+  <div class="seg" style="margin-top:10px">${[['dark','Oscura'],['light','Clara'],['auto','Como el teléfono']].map(([v,n])=>`<button class="${themePref()===v?'on':''}" onclick="ls('days_theme','${v}');applyTheme();sfx('toggle');render()">${n}</button>`).join('')}</div>
+  <div class="sec"><h2 class="serif">Avisos de siempre</h2></div>
+  <p class="muted small" style="margin:0 2px 10px">Así te aviso, salvo que cambies una fecha en particular.</p>
+  <div class="list">${['birthday','appointment','event'].map(k=>`<div class="li" style="cursor:default"><span style="width:8px;height:8px;border-radius:50%;background:${TYPES[k].c}"></span><div class="mid"><div class="t">${TYPES[k].n}</div><div class="s">${defaultAlerts(k,k==='birthday'?null:'10:00').map(alertLabel).join(', ')}</div></div></div>`).join('')}</div>
+  <div style="margin-top:22px"><button class="btn danger" onclick="if(confirm('¿Cerrar sesión?'))logout()">${ic('logout',18)} Cerrar sesión</button></div>`;
+}
+
+/* ---------------- hojas ---------------- */
+function openSheet(html){$('sheet').innerHTML='<div class="grab"></div>'+html;$('overlay').classList.add('open');$('sheet').scrollTop=0;sfx('open')}
+function closeSheet(){if($('overlay').classList.contains('open'))sfx('close');stopRec(true);$('overlay').classList.remove('open')}
+$('overlay').addEventListener('click',e=>{if(e.target.id==='overlay')closeSheet()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
+const head=(t,sub)=>`<div class="shead"><div><h3 class="serif">${t}</h3>${sub?`<p>${sub}</p>`:''}</div><button class="x" onclick="closeSheet()" aria-label="Cerrar">${ic('close',17)}</button></div>`;
+let toastT;function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2400)}
+
+/* ---------------- detalle ---------------- */
+function openEvent(id,occ){
+  const ev=events.find(e=>e.id===id);if(!ev)return;const ty=TYPES[ev.kind];const k=occ&&occ!=='undefined'?occ:ev.date;const age=ageOn(ev,k);const n=diffDays(today(),k);
+  openSheet(head(esc(ev.title),`<span style="color:${ty.c}">●</span> ${ty.n}${ev.repeat!=='none'?', '+REPEAT[ev.repeat].toLowerCase():''}`)+`
+  <div class="list" style="margin-bottom:14px">
+    <div class="li" style="cursor:default">${ic('cal',20)}<div class="mid"><div class="t">${cap(fmtDate(k))}</div><div class="s">${relWord(n)}${ev.time?', a las '+fmtTime(ev.time):''}${age?'. Cumple '+age:''}</div></div></div>
+    <div class="li" style="cursor:default">${ic('bell',20)}<div class="mid"><div class="t">Avisos</div><div class="s">${esc(alertsText(ev))}</div></div></div>
+    ${ev.notes?`<div class="li" style="cursor:default"><div class="mid"><div class="s">${esc(ev.notes)}</div></div></div>`:''}
+  </div>
+  ${ev.kind==='reminder'?`<button class="btn" onclick="toggleDoneEv('${ev.id}')">${ic('check',18)} ${ev.done?'Marcar como pendiente':'Ya lo hice'}</button>`:''}
+  <button class="btn alt" onclick="openEditor('${ev.id}')">Editar</button>
+  <button class="btn danger" onclick="delEvent('${ev.id}')">${ic('trash',17)} Borrar</button>`);
+}
+async function toggleDoneEv(id){const ev=events.find(e=>e.id===id);const {error}=await sb.from('dy_events').update({done:!ev.done}).eq('id',id);if(error)return toast('No se pudo guardar');ev.done=!ev.done;sfx(ev.done?'done':'undo');closeSheet();render()}
+async function delEvent(id){if(!confirm('¿Borrar esto?'))return;const {error}=await sb.from('dy_events').delete().eq('id',id);if(error)return toast('No se pudo borrar');events=events.filter(e=>e.id!==id);sfx('undo');closeSheet();render();toast('Borrado')}
+
+/* ---------------- editor ---------------- */
+let draft=null;
+function newDraft(kind='appointment',date=null){return {id:null,kind,title:'',date:date||today(),time:null,repeat:kind==='birthday'?'yearly':'none',born_year:null,notes:'',alerts:defaultAlerts(kind,null),_alertsTouched:false}}
+function openEditor(id,date,kind){
+  draft=id?{...events.find(e=>e.id===id),_alertsTouched:true}:newDraft(kind||'appointment',date);
+  if(!draft.alerts)draft.alerts=defaultAlerts(draft.kind,draft.time);
+  renderEditor();
+}
+function renderEditor(fromCapture){
+  const d=draft;const isB=d.kind==='birthday';
+  const html=`${fromCapture?'':head(d.id?'Editar':'Nuevo','')}
+  <div class="seg types">${Object.entries(TYPES).map(([k,v])=>`<button class="${d.kind===k?'on':''}" onclick="setType('${k}')"><i style="background:${v.c}"></i>${v.n}</button>`).join('')}</div>
+  <div class="field"><label for="eTitle">${isB?'¿De quién?':'¿Qué?'}</label><input id="eTitle" value="${esc(d.title)}" placeholder="${isB?'Ej. Cumpleaños de mi mamá':'Ej. Ir al doctor'}" oninput="draft.title=this.value"></div>
+  <div class="two"><div class="field"><label for="eDate">Fecha</label><input id="eDate" type="date" value="${d.date}" onchange="draft.date=this.value"></div>
+  ${isB?`<div class="field"><label for="eBorn">Año en que nació</label><input id="eBorn" inputmode="numeric" value="${d.born_year||''}" placeholder="Opcional" oninput="draft.born_year=parseInt(this.value)||null"></div>`
+  :`<div class="field"><label for="eTime">Hora</label><input id="eTime" type="time" value="${d.time||''}" onchange="setTime(this.value)"></div>`}</div>
+  ${!isB?`<div class="field"><label for="eRep">Repetir</label><select id="eRep" onchange="draft.repeat=this.value">${Object.entries(REPEAT).map(([k,v])=>`<option value="${k}" ${d.repeat===k?'selected':''}>${v}</option>`).join('')}</select></div>`:''}
+  <div class="field"><label>Avisarme</label><div class="chips">${PRESETS.filter(p=>!(p[2].m!=null&&(!d.time||isB))).map(([k,l,a])=>`<button class="chip ${d.alerts.some(x=>akey(x)===k)?'on':''}" onclick="toggleAlert('${k}')">${l}</button>`).join('')}</div></div>
+  <div class="field"><label for="eNotes">Notas</label><input id="eNotes" value="${esc(d.notes||'')}" placeholder="Opcional" oninput="draft.notes=this.value"></div>
+  <button class="btn" id="eSave" onclick="saveDraft()">${ic('check',18)} Guardar</button>`;
+  if(fromCapture){$('capForm').innerHTML=html}else openSheet(html);
+}
+function rerender(){renderEditor(!!$('capForm'))}
+function setType(k){draft.kind=k;if(k==='birthday'){draft.repeat='yearly';draft.time=null}else if(draft.repeat==='yearly'&&!draft._repeatTouched)draft.repeat='none';if(!draft._alertsTouched)draft.alerts=defaultAlerts(k,draft.time);sfx('toggle');rerender()}
+function setTime(v){draft.time=v||null;if(!draft._alertsTouched)draft.alerts=defaultAlerts(draft.kind,draft.time);else if(!draft.time)draft.alerts=draft.alerts.filter(a=>a.m==null);rerender()}
+function toggleAlert(k){draft._alertsTouched=true;const p=PRESETS.find(x=>x[0]===k);const i=draft.alerts.findIndex(x=>akey(x)===k);
+  if(i>=0)draft.alerts.splice(i,1);else{const a={...p[2]};if(a.d!=null)a.t=alertTime(draft.kind,a.d);draft.alerts.push(a)}sfx('toggle');rerender()}
+async function saveDraft(){
+  const d=draft;if(!d.title.trim()){$('eTitle').focus();toast(d.kind==='birthday'?'Escribe de quién es':'Escribe qué es');sfx('error');return}
+  if(!d.date){toast('Elige la fecha');return}
+  const row={kind:d.kind,title:d.title.trim(),date:d.date,time:d.kind==='birthday'?null:(d.time||null),repeat:d.repeat||'none',born_year:d.kind==='birthday'?(d.born_year||null):null,notes:(d.notes||'').trim()||null,alerts:d.alerts.map(a=>a.m!=null?{m:a.m}:{d:a.d,t:a.t||alertTime(d.kind,a.d)})};
+  $('eSave').disabled=true;
+  try{
+    if(d.id){const {error}=await sb.from('dy_events').update({...row,sent:{}}).eq('id',d.id);if(error)throw error;Object.assign(events.find(e=>e.id===d.id),row)}
+    else{const {data,error}=await sb.from('dy_events').insert({...row,user_id:user.id}).select().single();if(error)throw error;events.push(data)}
+    sfx('done');closeSheet();selDay=row.kind==='birthday'?(occurrences(row,today(),addDays(today(),366))[0]||row.date):row.date;calMonth=selDay.slice(0,7);render();
+    toast(row.alerts.length?'Guardado. Te aviso '+row.alerts.map(alertLabel).join(', ').toLowerCase():'Guardado');
+    if(pushState()==='off'&&!ls('days_push_asked')){ls('days_push_asked','1');setTimeout(openNotif,900)}
+  }catch(e){console.error(e);$('eSave').disabled=false;sfx('error');alert('No se pudo guardar: '+(e.message||e))}
+}
+
+/* ---------------- captura por voz ---------------- */
+let rec=null,recOn=false,lvlT=null;
+const SR=()=>window.SpeechRecognition||window.webkitSpeechRecognition;
+function openCapture(){
+  draft=null;const can=!!SR();
+  openSheet(head('¿Qué quieres que te recuerde?','')+`
+  ${can?`<div class="cap-orb" id="orb"><span class="ring"></span><span class="ring"></span><span class="ring"></span><button id="micBtn" data-nosfx onclick="toggleRec()" aria-label="Hablar">${ic('mic',36,1.8)}</button></div>
+  <div class="wave" id="wave">${'<i></i>'.repeat(9)}</div><div class="cap-state" id="capState">Toca y habla</div>`:''}
+  <div class="cap-text"><textarea id="capText" rows="1" placeholder="${can?'O escríbelo aquí':'Escribe o dicta con el micrófono del teclado'}" oninput="liveParse()"></textarea></div>
+  <div class="interp" id="interp"></div>
+  <div id="capForm"></div>
+  ${!draft?`<p class="muted small" id="capEx" style="text-align:center;line-height:1.7">“El jueves a las 4 pm ir al doctor”<br>“Cumpleaños de mi mamá el 12 de noviembre, cumple 60”<br>“Boda de Luis el 21 de noviembre a las 6 de la tarde”<br>“Pagar la luz el día 28, avísame 3 días antes”</p>`:''}`);
+  if(can)setTimeout(startRec,350);else setTimeout(()=>$('capText')?.focus(),300);
+}
+function toggleRec(){recOn?stopRec():startRec()}
+function startRec(){
+  const C=SR();if(!C)return;try{rec=new C()}catch(e){return}
+  rec.lang='es-MX';rec.interimResults=true;rec.continuous=false;
+  const base=($('capText')?.value||'').trim();
+  rec.onresult=e=>{let txt='';for(let i=0;i<e.results.length;i++)txt+=e.results[i][0].transcript;const ta=$('capText');if(ta){ta.value=(base?base+' ':'')+txt;liveParse()}bumpLevel()};
+  rec.onerror=e=>{const s=$('capState');if(s)s.textContent=e.error==='not-allowed'?'Permite el micrófono, o escríbelo abajo':e.error==='no-speech'?'No te escuché. Toca y vuelve a intentar':'No se pudo escuchar. Escríbelo abajo';stopRec(true)};
+  rec.onend=()=>stopRec(true);
+  try{rec.start();recOn=true;sfx('record');$('orb')?.classList.add('rec');const s=$('capState');if(s)s.textContent='Te escucho…';idleWave()}catch(e){recOn=false}
+}
+function stopRec(silent){
+  if(rec){try{rec.stop()}catch(e){}}rec=null;
+  if(recOn&&!silent)sfx('stop');if(recOn&&silent&&$('orb'))sfx('stop');
+  recOn=false;clearInterval(lvlT);$('orb')?.classList.remove('rec');
+  document.querySelectorAll('#wave i').forEach(i=>i.style.height='6px');
+  const s=$('capState');if(s&&s.textContent==='Te escucho…')s.textContent=($('capText')?.value||'').trim()?'Revisa abajo y guarda':'Toca y habla';
+}
+// Ondas: se mueven solas mientras escucha y saltan cada vez que llega una palabra.
+let lvl=0;
+function bumpLevel(){lvl=1}
+function idleWave(){clearInterval(lvlT);lvlT=setInterval(()=>{lvl*=.82;const bars=document.querySelectorAll('#wave i');bars.forEach((b,i)=>{const h=6+Math.abs(Math.sin(Date.now()/180+i*.9))*(6+lvl*16)+lvl*Math.random()*8;b.style.height=h.toFixed(0)+'px'});$('orb')?.style.setProperty('--lvl',lvl.toFixed(2))},70)}
+function liveParse(){
+  const ta=$('capText');if(ta){ta.style.height='auto';ta.style.height=ta.scrollHeight+'px'}
+  const txt=(ta?.value||'').trim();const box=$('interp');if(!box)return;
+  $('capEx')?.remove();
+  if(!txt){box.innerHTML='';$('capForm').innerHTML='';draft=null;return}
+  const p=parseSpeech(txt);
+  const kind=['birthday','appointment','event'].includes(p.kind)?p.kind:'reminder';
+  const prevTouched=draft&&draft._alertsTouched;
+  draft={id:null,kind,title:p.title||txt,date:p.date||today(),time:kind==='birthday'?null:p.time,repeat:p.kind==='birthday'?'yearly':(['yearly','monthly','weekly'].includes(p.repeat)?p.repeat:'none'),born_year:p.bornYear||null,notes:'',alerts:p.alerts.length?p.alerts.map(a=>a.d!=null?{d:a.d,t:alertTime(kind,a.d)}:a):defaultAlerts(kind,p.time),_alertsTouched:!!p.alerts.length||prevTouched};
+  if(p.alerts.length&&!p.alerts.some(a=>a.d===0||a.m!=null))draft.alerts.push(draft.time?{m:0}:{d:0,t:'08:00'});
+  const chips=[`<span><i style="background:${TYPES[kind].c}"></i>${TYPES[kind].n}</span>`];
+  if(p.date)chips.push(`<span>${ic('cal',14)}${cap(describeParsed({date:p.date}))}</span>`);
+  if(p.time&&kind!=='birthday')chips.push(`<span>${ic('bell',14)}${fmtTime(p.time)}</span>`);
+  if(p.bornYear)chips.push(`<span>Cumple ${+draft.date.slice(0,4)-p.bornYear}</span>`);
+  if(draft.repeat!=='none'&&kind!=='birthday')chips.push(`<span>${REPEAT[draft.repeat]}</span>`);
+  const sig=chips.join('');if(box.dataset.sig!==sig){box.innerHTML=sig;box.dataset.sig=sig}
+  renderEditor(true);
+}
+
+/* ---------------- notificaciones ---------------- */
+function pushState(){
+  if(!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window)){const ios=/iphone|ipad|ipod/i.test(navigator.userAgent),st=navigator.standalone||matchMedia('(display-mode: standalone)').matches;return ios&&!st?'install':'unsupported'}
+  if(Notification.permission==='denied')return 'denied';
+  return Notification.permission==='granted'&&ls('days_push')==='on'?'on':'off';
+}
+function openNotif(){
+  const st=pushState();const msg={install:'En iPhone abre Days en Safari, toca Compartir y luego “Agregar a pantalla de inicio”. Ábrela desde ese ícono y activa los avisos aquí.',unsupported:'Abre Days desde el ícono instalado en tu teléfono.',denied:'Están bloqueadas. Actívalas en Ajustes del teléfono, Notificaciones, Days.',on:'Ya están activadas en este teléfono.'}[st];
+  openSheet(head('Avisos','Para que te llegue el recordatorio aunque la app esté cerrada.')+(msg?`<p class="muted">${msg}</p>`:`<button class="btn" onclick="enablePush(this)">${ic('bell',18)} Activar avisos</button>`)+`<button class="btn alt" onclick="closeSheet()">Ahora no</button>`);
+}
+const b64=b=>{const p='='.repeat((4-b.length%4)%4),s=atob((b+p).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from([...s].map(c=>c.charCodeAt(0)))};
+async function enablePush(btn){
+  try{btn.disabled=true;const perm=await Notification.requestPermission();if(perm!=='granted'){btn.disabled=false;return toast('Sin permiso no te puedo avisar')}
+    const reg=await navigator.serviceWorker.ready;const {publicKey}=await (await fetch(PUSH_API+'/api/vapid')).json();
+    let sub=await reg.pushManager.getSubscription();if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64(publicKey)});
+    const j=sub.toJSON();const {error}=await sb.from('rt_push_subs').upsert({user_id:user.id,app:'days',endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth,tz:Intl.DateTimeFormat().resolvedOptions().timeZone},{onConflict:'endpoint'});if(error)throw error;
+    ls('days_push','on');sfx('done');closeSheet();render();toast('Avisos activados');
+  }catch(e){console.error(e);btn.disabled=false;alert('No se pudieron activar: '+(e.message||e))}
+}
+async function testPush(){try{const {data:{session}}=await sb.auth.getSession();const r=await fetch(PUSH_API+'/api/test-push',{method:'POST',headers:{Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},body:JSON.stringify({app:'days'})});const j=await r.json().catch(()=>({}));toast(r.ok?'Enviada, revisa tus notificaciones':'No se pudo: '+(j.error||r.status))}catch(e){toast('No se pudo enviar')}}
+
+/* ---------------- nombre y cuenta ---------------- */
+function openName(force){openSheet(head(force?'¿Cómo te llamas?':'Tu nombre',force?'Para saludarte por tu nombre y no por tu correo.':'Se usa en todas tus apps.')+`<div class="field"><input id="nmIn" value="${esc(user?.user_metadata?.name||'')}" placeholder="Tu nombre" autocomplete="given-name"></div><button class="btn" onclick="saveName(this)">${ic('check',18)} Guardar</button>`);setTimeout(()=>$('nmIn')?.focus(),300)}
+async function saveName(btn){const nm=$('nmIn').value.trim();if(!nm)return toast('Escribe tu nombre');btn.disabled=true;const {data,error}=await sb.auth.updateUser({data:{name:nm}});if(error){btn.disabled=false;return toast('No se pudo guardar')}user=data.user;sfx('done');closeSheet();render();toast('Mucho gusto, '+userName())}
+function showSignup(on){$('loginCard').style.display=on?'none':'block';$('signupCard').style.display=on?'block':'none'}
+function authErr(id,m){const e=$(id);e.textContent=m;e.style.display='block';sfx('error')}
+async function login(){const email=$('lEmail').value.trim(),password=$('lPass').value;if(!email||!password)return authErr('loginErr','Escribe tu correo y contraseña.');
+  $('lBtn').disabled=true;const {data,error}=await sb.auth.signInWithPassword({email,password});$('lBtn').disabled=false;
+  if(error)return authErr('loginErr',error.message==='Invalid login credentials'?'Correo o contraseña incorrectos.':error.message.includes('confirm')?'Primero confirma tu correo (revisa tu bandeja).':error.message);sfx('done');start(data.user)}
+async function signup(){const name=$('sName').value.trim(),email=$('sEmail').value.trim(),password=$('sPass').value;
+  if(!name)return authErr('signupErr','Escribe tu nombre.');if(!email.includes('@'))return authErr('signupErr','Escribe un correo válido.');if(password.length<6)return authErr('signupErr','La contraseña debe tener al menos 6 caracteres.');
+  $('sBtn').disabled=true;const {data,error}=await sb.auth.signUp({email,password,options:{data:{name},emailRedirectTo:location.origin}});$('sBtn').disabled=false;
+  if(error)return authErr('signupErr',error.message.includes('registered')?'Ese correo ya tiene cuenta. Entra con él.':error.message);
+  if(!data.session){showSignup(false);authErr('loginErr','Te mandamos un correo de confirmación. Ábrelo y luego entra aquí.');return}sfx('done');start(data.user)}
+async function logout(){await sb.auth.signOut();user=null;events=[];closeSheet();$('auth').classList.add('open')}
+
+/* ---------------- arranque ---------------- */
+function hideSplash(){const s=$('splash');if(s&&!s.classList.contains('hide')){s.classList.add('hide');setTimeout(()=>s.remove(),450)}}
+async function start(u){
+  user=u;$('auth').classList.remove('open');
+  try{await loadData()}catch(e){console.error(e);$('main').innerHTML=`<div class="empty" style="margin-top:60px"><b>No pude cargar tus fechas</b>Revisa tu internet.<div style="margin-top:14px"><button class="btn" onclick="location.reload()">Reintentar</button></div></div>`;hideSplash();return}
+  buildNav();render();hideSplash();
+  if(!u.user_metadata?.name)setTimeout(()=>openName(true),800);
+}
+(async function boot(){
+  applyTheme();const n=new Date();$('splashNum').innerHTML=`${n.getDate()}<small>${n.toLocaleDateString('es-MX',{month:'long'})}</small>`;
+  if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  setTimeout(hideSplash,6000);
+  const {data:{session}}=await sb.auth.getSession();
+  if(session)await start(session.user);else{$('auth').classList.add('open');hideSplash()}
+})();
+</script>
+</body>
+</html>
